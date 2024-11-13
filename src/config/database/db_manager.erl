@@ -17,37 +17,38 @@ stop() ->
     unregister(mysql_conn),
     ok.
 
-
 create_tables(Pid) ->
     % User table
     mysql:query(Pid, "CREATE TABLE IF NOT EXISTS users (
-        id VARCHAR(255) PRIMARY KEY,
+        id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(255),
         password VARCHAR(255)
     )"),
 
     % Room table
     mysql:query(Pid, "CREATE TABLE IF NOT EXISTS rooms (
-        id VARCHAR(255) PRIMARY KEY,
+        id INT AUTO_INCREMENT PRIMARY KEY,
         type ENUM('personal', 'group'),
         name VARCHAR(255)
     )"),
 
     % Member table
-     mysql:query(Pid, "CREATE TABLE IF NOT EXISTS members (
-        id VARCHAR(255) PRIMARY KEY,
-        room_id VARCHAR(255),
-        user_id VARCHAR(255),
+    mysql:query(Pid, "CREATE TABLE IF NOT EXISTS members (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        room_id INT,
+        user_id INT,
         FOREIGN KEY (room_id) REFERENCES rooms(id),
         FOREIGN KEY (user_id) REFERENCES users(id)
     )"),
+
+    % Message table
     mysql:query(Pid, "CREATE TABLE IF NOT EXISTS messages (
-        id VARCHAR(255) PRIMARY KEY,
+        id INT AUTO_INCREMENT PRIMARY KEY,
         content VARCHAR(255),
         created_at DATE,
-        room_id VARCHAR(255),
-        sender_id VARCHAR(255),
+        room_id INT,
+        sender_id INT,
         FOREIGN KEY (room_id) REFERENCES rooms(id),
-        FOREIGN KEY (sender_id) REFERENCES members(id)
+        FOREIGN KEY (sender_id) REFERENCES users(id)
     )"),
     ok.

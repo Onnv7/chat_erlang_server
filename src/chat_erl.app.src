@@ -2,7 +2,7 @@
  [
   {description, "Chat Application"},
   {vsn, "1.0.0"},
-  {modules, [chat_erl_app, chat_erl_sup, db_manager, user_service, chat_room]},
+  {modules, [chat_erl_app, chat_erl_sup, db_manager, user_service, chat_room, user_controller, data_type_util, user_db, bcrypt_util]},
   {registered, []},
   {applications, [kernel, stdlib, cowboy, ranch, mysql]},
   {mod, {chat_erl_app, []}},

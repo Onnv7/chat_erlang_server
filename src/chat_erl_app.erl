@@ -19,7 +19,8 @@ start(_StartType, _StartArgs) ->
     chat_erl_sup:start_link(),
     Dispatch = cowboy_router:compile([
         {'_', [
-            {"/hello", user_service, []}
+             {"/user/[...]", user_controller, []}
+            % {"/[...]", main_handler, []}
         ]}
     ]),
     {ok, _} = cowboy:start_clear(my_http_listener,
