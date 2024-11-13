@@ -31,7 +31,7 @@ create_response(Req, #error_response{status = Status, error = Error, message = M
 create_response(Status, IsSuccess, Message, Req) ->
     ResponseData = #{success => IsSuccess, message =>  Message},
     JsonData = jsx:encode(ResponseData),
-    {ok, Resp} = cowboy_req:reply(Status, #{<<"content-type">> => <<"application/json">>}, JsonData, Req),
+    Resp = cowboy_req:reply(Status, #{<<"content-type">> => <<"application/json">>}, JsonData, Req),
     {ok, Resp, []}.
 
 

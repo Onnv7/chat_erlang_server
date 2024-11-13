@@ -19,13 +19,15 @@ start(_StartType, _StartArgs) ->
     chat_erl_sup:start_link(),
     Dispatch = cowboy_router:compile([
         {'_', [
-             {"/user/[...]", user_controller, []}
-            % {"/[...]", main_handler, []}
+                {"/user/[...]", [{auth_middleware, []}], user_controller, []}
         ]}
     ]),
+    Middlewares = [
+        {auth_middleware, cowboy_router, cowboy_handler}
+    ],
     {ok, _} = cowboy:start_clear(my_http_listener,
         [{port, 8081}],
-        #{env => #{dispatch => Dispatch}}
+         #{env => #{dispatch => Dispatch, middlewares => Middlewares}}
     ),
     io:format("Server started at http://localhost:8081/hello and ws://localhost:8081/ws~n"),
     {ok, self()}.

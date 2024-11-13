@@ -11,8 +11,7 @@ init(Req, State) ->
         "/user" ->
             handle_get(Req, State);
         "/user/register" ->
-            handle_register(Req, Method),
-            http_util:create_response(200, <<"Register successfully">>, Req);
+            handle_register(Req, Method);
         _ ->
             {ok, Resp} = cowboy_req:reply(404, #{<<"content-type">> => <<"application/json">>},
                 <<"{\"error\": \"Not Found\"}">>, Req),
@@ -20,9 +19,8 @@ init(Req, State) ->
     end.
 
 handle_get(Req, _State) ->
-    Response = #{message => <<"This is the user page">>},
-    http_util:create_response(200, Response, <<"This is message">>, Req).
-
+    % Response = #{message => <<"This is the user page">>},
+    http_util:create_response(200, true, <<"This is message">>, Req).
 
 handle_register(Req, Method) ->
     if Method =:= <<"POST">> ->
