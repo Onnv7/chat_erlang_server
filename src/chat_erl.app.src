@@ -1,14 +1,11 @@
-{application, chat_erl, [
-    {description, "An OTP application"},
-    {vsn, "0.1.0"},
-    {registered, []},
-    {mod, {chat_erl_app, []}},
-    {applications, [
-        kernel,
-        stdlib
-    ]},
-    {env, []},
-    {modules, []},
-    {licenses, ["Apache-2.0"]},
-    {links, []}
+{application, chat_erl,
+ [
+  {description, "Chat Application"},
+  {vsn, "1.0.0"},
+  {modules, [chat_erl_app, chat_erl_sup, db_manager, user_service, chat_room]},
+  {registered, []},
+  {applications, [kernel, stdlib, cowboy, ranch, mysql]},
+  {mod, {chat_erl_app, []}},
+  {env, []},
+  {runtime_dependencies, []}
  ]}.
