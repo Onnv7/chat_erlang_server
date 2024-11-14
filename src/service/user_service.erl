@@ -9,7 +9,7 @@ handle_register_user(Req) ->
     Password = binary_to_list(maps:get(<<"password">>, Data)),
     io:format("Username: ~p~n", [Username]),
     user_db:insert_user(Username, Password).
-    % Pass = bcrypt_util:hash_password(Password),
-    % io:format("Password: ~p~n", [Pass]).
-    
+% Pass = bcrypt_util:hash_password(Password),
+% io:format("Password: ~p~n", [Pass]).
+
 

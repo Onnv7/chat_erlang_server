@@ -1,5 +1,5 @@
 -module(user_db).
--export([insert_user/2, create_user_table/1]).
+-export([insert_user/2, create_user_table/1, get_users/0]).
 
 create_user_table(Pid) ->
     mysql:query(Pid, "CREATE TABLE IF NOT EXISTS users (
@@ -7,6 +7,17 @@ create_user_table(Pid) ->
         username VARCHAR(255),
         password VARCHAR(255)
     )").
+
+get_users() ->
+    case mysql:query(whereis(mysql_conn), "SELECT id, username, password FROM users") of
+        {ok, _, Rows} ->
+            [
+                #{id => Id, username => Username, password => Password}
+                || [Id, Username, Password] <- Rows
+            ];
+        _ ->
+            []
+    end.
 
 insert_user(Username, Password) ->
     Pid = whereis(mysql_conn),

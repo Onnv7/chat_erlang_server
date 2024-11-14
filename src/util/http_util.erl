@@ -18,20 +18,20 @@ get_path(Req) ->
 
 create_response(Req, #success_response{status = Status, data = Data, message = Message}) ->
     ResponseData = #{success => true, data => Data, message => Message},
-    JsonData = jsx:encode(ResponseData),
-    {ok, Resp} = cowboy_req:reply(Status, #{<<"content-type">> => <<"application/json">>}, JsonData, Req),
+    JsonData = json:encode(ResponseData),
+    Resp= cowboy_req:reply(Status, #{<<"content-type">> => <<"application/json">>}, JsonData, Req),
     {ok, Resp, []};
 
 create_response(Req, #error_response{status = Status, error = Error, message = Message}) ->
     ResponseData = #{success => false, error => Error, message => Message},
     JsonData = jsx:encode(ResponseData),
-    {ok, Resp} = cowboy_req:reply(Status, #{<<"content-type">> => <<"application/json">>}, JsonData, Req),
+    Resp = cowboy_req:reply(Status, #{<<"content-type">> => <<"application/json">>}, JsonData, Req),
     {ok, Resp, []}.
 
 create_response(Status, IsSuccess, Message, Req) ->
     ResponseData = #{success => IsSuccess, message =>  Message},
     JsonData = jsx:encode(ResponseData),
-    {ok, Resp} = cowboy_req:reply(Status, #{<<"content-type">> => <<"application/json">>}, JsonData, Req),
+    Resp = cowboy_req:reply(Status, #{<<"content-type">> => <<"application/json">>}, JsonData, Req),
     {ok, Resp, []}.
 
 
