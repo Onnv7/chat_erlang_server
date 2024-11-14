@@ -21,7 +21,7 @@ create_tables(Pid) ->
     % User table
     mysql:query(Pid, "CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(255),
+        username VARCHAR(255) UNIQUE,
         password VARCHAR(255)
     )"),
 
@@ -49,6 +49,6 @@ create_tables(Pid) ->
         room_id INT,
         sender_id INT,
         FOREIGN KEY (room_id) REFERENCES rooms(id),
-        FOREIGN KEY (sender_id) REFERENCES users(id)
+        FOREIGN KEY (sender_id) REFERENCES members(id)
     )"),
     ok.
