@@ -12,9 +12,11 @@
 start(_StartType, _StartArgs) ->
     {ok, _} = db_manager:start_link(),
     chat_erl_sup:start_link(),
+    socket_server:start_link(),
     Dispatch = cowboy_router:compile([
         {'_', [
-                {"/user/[...]", [{auth_middleware, []}], user_controller, []}
+                {"/user/[...]", user_controller, []},
+                {"/ws/[...]", message_socket, []}
         ]}
     ]),
     Middlewares = [auth_middleware, cowboy_router, cowboy_handler],
@@ -22,7 +24,8 @@ start(_StartType, _StartArgs) ->
         [{port, 8081}],
         #{
             env => #{dispatch => Dispatch}, 
-            middlewares => Middlewares
+            middlewares => Middlewares,
+            idle_timeout => 60000
         }
     ),
     io:format("Server started at http://localhost:8081/hello and ws://localhost:8081/ws~n"),

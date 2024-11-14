@@ -26,6 +26,7 @@ handle_login_user(Req) ->
                     Expires =  erlang:system_time(seconds) + 3600,
                     Token = jwt_util:create_token(Expires),
                     Response = #login_response{accessToken = Token, id = Id},
+                    socket_server:send_message(Id, "Msg"),
                     {ok, Response};
                 false ->
                     {error, invalid_password}

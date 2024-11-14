@@ -6,7 +6,7 @@
 execute(Req, Env) ->
     io:format("In auth middleware~n"),
     Path = cowboy_req:path(Req),
-    io:format("Path ~s", [Path]),
+    io:format("Path ~s~n", [Path]),
     case should_check_path(Path) of
         true ->
             case cowboy_req:header(<<"authorization">>, Req) of

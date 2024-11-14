@@ -25,9 +25,10 @@ handle_login(Req, Method) ->
     if Method =:= <<"POST">> ->
         case user_service:handle_login_user(Req) of
             {ok, #login_response{accessToken = Token, id = Id}} ->
-                ResponseBody = json:encode(#{accessToken => Token, id => Id}),
-                {ok, Resp} = cowboy_req:reply(200, #{<<"content-type">> => <<"application/json">>}, ResponseBody, Req),
-                {ok, Resp, []};
+                ResponseData = #{<<"accessToken">> => Token, <<"id">> => Id},
+                http_util:create_response(Req, #success_response{status = 200, data = ResponseData, message = <<"Login successfully">>});
+                % Req2 = cowboy_req:reply(200, #{<<"content-type">> => <<"application/json">>}, ResponseBody, Req),
+                % {ok, Req2, []};
             {error, invalid_password} ->
                 {ok, Resp} = cowboy_req:reply(401, #{<<"content-type">> => <<"application/json">>},
                     <<"{\"error\": \"Invalid password\"}">>, Req),
