@@ -51,4 +51,13 @@ create_tables(Pid) ->
         FOREIGN KEY (room_id) REFERENCES rooms(id),
         FOREIGN KEY (sender_id) REFERENCES members(id)
     )"),
+
+        % Relationship table
+    mysql:query(Pid, "CREATE TABLE IF NOT EXISTS relationships (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        receiver_id INT,
+        sender_id INT,
+        FOREIGN KEY (receiver_id) REFERENCES users(id),
+        FOREIGN KEY (sender_id) REFERENCES users(id)
+    )"),
     ok.
