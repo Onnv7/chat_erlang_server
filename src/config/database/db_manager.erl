@@ -25,18 +25,11 @@ stop() ->
 
 create_tables(Pid) ->
     % User table
-    mysql:query(
-        Pid,
-        "CREATE TABLE IF NOT EXISTS users (
-\n"
-        "        id INT AUTO_INCREMENT PRIMARY KEY,
-\n"
-        "        username VARCHAR(255),
-\n"
-        "        password VARCHAR(255)
-\n"
-        "    )"
-    ),
+    mysql:query(Pid, "CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(255) UNIQUE,
+        password VARCHAR(255)
+    )"),
 
     % Room table
     mysql:query(
@@ -71,24 +64,13 @@ create_tables(Pid) ->
     ),
 
     % Message table
-    mysql:query(
-        Pid,
-        "CREATE TABLE IF NOT EXISTS messages (
-\n"
-        "        id INT AUTO_INCREMENT PRIMARY KEY,
-\n"
-        "        content VARCHAR(255),
-\n"
-        "        created_at DATE,
-\n"
-        "        room_id INT,
-\n"
-        "        sender_id INT,
-\n"
-        "        FOREIGN KEY (room_id) REFERENCES rooms(id),
-\n"
-        "        FOREIGN KEY (sender_id) REFERENCES users(id)
-\n"
-        "    )"
-    ),
+    mysql:query(Pid, "CREATE TABLE IF NOT EXISTS messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        content VARCHAR(255),
+        created_at DATE,
+        room_id INT,
+        sender_id INT,
+        FOREIGN KEY (room_id) REFERENCES rooms(id),
+        FOREIGN KEY (sender_id) REFERENCES members(id)
+    )"),
     ok.
