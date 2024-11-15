@@ -351,7 +351,13 @@ insert_room(Type, Name) ->
     Query = io_lib:format("INSERT INTO rooms (type, name) VALUES ('~s', '~s')", [
         Type, Name
     ]),
-    mysql:query(Pid, Query).
+
+    case mysql:query(Pid, Query) of
+        Result ->
+            {ok, Name};
+        {error, Reason} ->
+            {error, Reason}
+    end.
 
 get_members() ->
     case
@@ -366,42 +372,7 @@ get_members() ->
             []
     end.
 
-% insert_room_and_member(Type, Name, UserId) ->
-%     Pid = whereis(mysql_conn),
-
-%     % Chèn phòng vào bảng rooms
-%     Query = io_lib:format(
-%         "INSERT INTO rooms (type, name) VALUES (~p, '~s'); SELECT LAST_INSERT_ID() AS id", [
-%             Type, Name
-%         ]
-%     ),
-
-%     % In ra câu query trước khi thực thi
-%     % io:format("Executing query: ~s~n", [Query]),
-%     % Data = mysql:query(Pid, Query),
-%     % io:format("Data ~w", [Data]),
-%     case mysql:query(Pid, Query) of
-%         % Match với kiểu dữ liệu trả về
-%         % {ok, _BinaryData, [[RoomId]]} ->
-%         %     % for(userId: userIdList) {
-%         %     insert(userId, RoomId)
-%         % }
-
-%             io:format("Room ID lấy được: ~p~n", [RoomId]),
-
-%             % Thực hiện chèn thành viên vào bảng members
-%             MemberQuery = io_lib:format("INSERT INTO members (room_id, user_id) VALUES (~p, ~p)", [
-%                 RoomId, UserId
-%             ]),
-%             case mysql:query(Pid, MemberQuery) of
-%                 {ok, _} -> {ok, RoomId};
-%                 {error, Reason} -> {error, Reason}
-%             end;
-%         {error, Reason} ->
-%             {error, Reason}
-%     end.
-
-insert_room_and_member(Type, Name, UserId) ->
+insert_room_and_member(Type, Name, UserIds) ->
     Pid = whereis(mysql_conn),
 
     % Chèn phòng vào bảng rooms và lấy id phòng vừa tạo
@@ -416,28 +387,30 @@ insert_room_and_member(Type, Name, UserId) ->
         {ok, _Result, [[RoomId]]} ->
             io:format("Room ID lấy được: ~p~n", [RoomId]),
 
-            % Thực hiện chèn thành viên vào bảng members
-            MemberQuery = io_lib:format("INSERT INTO members (room_id, user_id) VALUES (~p, ~p)", [
-                RoomId, UserId
+            % Tạo chuỗi INSERT cho nhiều user_id
+            Values = lists:map(
+                fun(UserId) -> io_lib:format("(~p, ~p)", [RoomId, UserId]) end, UserIds
+            ),
+
+            % Kết hợp tất cả các giá trị vào một chuỗi
+            ValuesString = string:join(lists:map(fun(X) -> lists:flatten(X) end, Values), ", "),
+
+            % Câu query chèn nhiều thành viên vào bảng members
+            MemberQuery = io_lib:format("INSERT INTO members (room_id, user_id) VALUES ~s", [
+                ValuesString
             ]),
 
             % Thực thi câu query chèn thành viên
             case mysql:query(Pid, MemberQuery) of
                 Result ->
-                    % Thành công
-                    io:format("Successfully inserted member into room ~p~n", [RoomId]),
+                    % Thành công, trả về RoomId (giá trị đã lưu từ câu query trước đó)
                     {ok, RoomId};
                 {error, Reason} ->
-                    io:format("Error inserting member: ~p~n", [Reason]),
                     % Lỗi khi chèn thành viên
                     {error, Reason}
             end;
         % Trường hợp kết quả trả về không khớp
-        {ok, _Result, _} ->
-            io:format("Unexpected result format from query: ~p~n", [_Result]),
-            {error, "Unexpected result format"};
-        % Trường hợp khác (ví dụ: lỗi khi kết nối, hoặc không thể thực hiện truy vấn)
-        {error, Reason} ->
-            io:format("Error during query execution: ~p~n", [Reason]),
-            {error, Reason}
+        _Other ->
+            io:format("Unexpected result from query: ~p~n", [_Other]),
+            {error, "Unexpected result format"}
     end.

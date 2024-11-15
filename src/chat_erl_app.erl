@@ -16,7 +16,8 @@ start(_StartType, _StartArgs) ->
     Dispatch = cowboy_router:compile([
         {'_', [
                {"/user/[...]", user_controller, []},
-            {"/room/[...]", room_controller, []},
+                {"/room/[...]", room_controller, []},
+                {"/message/[...]", message_controller, []},
                 {"/ws/[...]", message_socket, []}
         ]}
     ]),

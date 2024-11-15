@@ -1,4 +1,5 @@
 -module(room_controller).
+-include("../config/datatype/data_type.hrl").
 -export([handle_register/2, handle_get_members/2, handle_create_member/2]).
 
 -behaviour(cowboy_handler).
@@ -13,8 +14,7 @@ init(Req, State) ->
         "/room/members" ->
             handle_get_members(Req, State);
         "/room/register" ->
-            handle_register(Req, Method),
-            http_util:create_response(200, <<"Register successfully">>, Req);
+            handle_register(Req, Method);
         % Đường dẫn tạo phòng và thêm thành viên
         "/room/create-members" ->
             handle_create_member(Req, Method);
@@ -29,42 +29,28 @@ init(Req, State) ->
     end.
 
 handle_get(Req, _State) ->
-    % Giả sử bạn lấy danh sách người dùng từ dịch vụ user_service
+    % Giả sử bạn lấy danh sách phòng từ dịch vụ room_db
     Rooms = room_db:get_rooms(),
 
-    % Mã hóa danh sách người dùng thành JSON
+    % Tạo phản hồi dữ liệu các phòng
+    ResponseData = #{<<"rooms">> => Rooms},
 
-    % Sử dụng jsx để mã hóa JSON
-    UsersJson = jsx:encode(Rooms),
-
-    % Tạo phản hồi HTTP với mã trạng thái 200 và dữ liệu người dùng
-    {ok, Req2} = cowboy_req:reply(
-        200,
-        #{<<"content-type">> => <<"application/json">>},
-        UsersJson,
-        Req
-    ),
-
-    {ok, Req2, []}.
+    % Tạo phản hồi HTTP với mã trạng thái 200 và dữ liệu các phòng
+    http_util:create_response(Req, #success_response{
+        status = 200, data = ResponseData, message = <<"Rooms fetched successfully">>
+    }).
 
 handle_get_members(Req, _State) ->
     % Giả sử bạn lấy danh sách người dùng từ dịch vụ user_service
     Members = room_db:get_members(),
 
-    % Mã hóa danh sách người dùng thành JSON
+    % Tạo phản hồi dữ liệu các phòng
+    ResponseData = #{<<"members">> => Members},
 
-    % Sử dụng jsx để mã hóa JSON
-    UsersJson = jsx:encode(Members),
-
-    % Tạo phản hồi HTTP với mã trạng thái 200 và dữ liệu người dùng
-    {ok, Req2} = cowboy_req:reply(
-        200,
-        #{<<"content-type">> => <<"application/json">>},
-        UsersJson,
-        Req
-    ),
-
-    {ok, Req2, []}.
+    % Tạo phản hồi HTTP với mã trạng thái 200 và dữ liệu các phòng
+    http_util:create_response(Req, #success_response{
+        status = 200, data = ResponseData, message = <<"Rooms fetched successfully">>
+    }).
 
 handle_register(Req, Method) ->
     if
@@ -72,10 +58,35 @@ handle_register(Req, Method) ->
             {ok, Body, _} = cowboy_req:read_body(Req),
             case jsx:decode(Body, [{labels, atom}]) of
                 #{type := Type, name := Name} ->
-                    room_db:insert_room(Type, Name),
-                    http_util:create_response(200, true, <<"Create successfully">>, Req);
+                    case room_db:insert_room(Type, Name) of
+                        %     http_util:create_response(200, true, <<"Create successfully">>, Req);
+                        % _ ->
+                        %     http_util:create_response(400, false, <<"Invalid JSON payload">>, Req)
+                        {ok, Name} ->
+                            % Tạo phản hồi dữ liệu phòng vừa được tạo
+                            ResponseData = #{<<"name">> => Name},
+                            % Trả về phản hồi HTTP với mã trạng thái 200
+                            http_util:create_response(Req, #success_response{
+                                status = 200,
+                                data = ResponseData,
+                                message = <<"Room created successfully">>
+                            });
+                        {error, Reason} ->
+                            % Trả về lỗi nếu có
+                            ResponseData = #{<<"error">> => Reason},
+                            http_util:create_response(Req, #success_response{
+                                status = 500,
+                                data = ResponseData,
+                                message = <<"Room creation failed">>
+                            })
+                    end;
                 _ ->
-                    http_util:create_response(400, false, <<"Invalid JSON payload">>, Req)
+                    % Nếu JSON không hợp lệ
+                    http_util:create_response(Req, #success_response{
+                        status = 400,
+                        data = #{<<"error">> => <<"Invalid JSON payload">>},
+                        message = <<"Invalid JSON payload">>
+                    })
             end;
         true ->
             http_util:create_response(405, false, <<"Method not allowed">>, Req)
@@ -86,26 +97,44 @@ handle_create_member(Req, Method) ->
         Method =:= <<"POST">> ->
             {ok, Body, _} = cowboy_req:read_body(Req),
             case jsx:decode(Body, [{labels, atom}]) of
-                #{type := Type, name := Name, user_id := UserId} ->
-                    case room_db:insert_room_and_member(Type, Name, UserId) of
+                #{type := Type, name := Name, user_ids := UserIds} when is_list(UserIds) ->
+                    io:format("Received data - Type: ~p, Name: ~p, UserIds: ~p~n", [
+                        Type, Name, UserIds
+                    ]),
+                    case room_db:insert_room_and_member(Type, Name, UserIds) of
                         {ok, RoomId} ->
-                            % Nếu chèn thành công
-                            ResponseMessage = io_lib:format("Create successfully, Room ID: ~p", [
-                                RoomId
-                            ]),
-                            http_util:create_response(
-                                200, true, lists:flatten(ResponseMessage), Req
-                            );
+                            % Tạo phản hồi dữ liệu phòng vừa được tạo
+                            ResponseData = #{<<"room_id">> => RoomId},
+                            % Trả về phản hồi HTTP với mã trạng thái 200
+                            http_util:create_response(Req, #success_response{
+                                status = 200,
+                                data = ResponseData,
+                                message = <<"Member created successfully">>
+                            });
                         {error, Reason} ->
                             % Trả về lỗi nếu có
-                            ErrorMessage = io_lib:format("Database error: ~p", [Reason]),
-                            http_util:create_response(500, false, lists:flatten(ErrorMessage), Req)
+                            ResponseData = #{<<"error">> => Reason},
+                            http_util:create_response(Req, #success_response{
+                                status = 500,
+                                data = ResponseData,
+                                message = <<"Member creation failed">>
+                            })
                     end;
                 _ ->
-                    % Nếu JSON không hợp lệ
-                    http_util:create_response(400, false, <<"Invalid JSON payload">>, Req)
+                    % Xử lý nếu JSON không hợp lệ hoặc thiếu danh sách user_ids
+                    http_util:create_response(Req, #success_response{
+                        status = 400,
+                        data = #{<<"error">> => <<"Invalid JSON payload">>},
+                        message = <<"Invalid JSON payload">>
+                    })
             end;
         true ->
-            % Nếu không phải phương thức POST
-            http_util:create_response(405, false, <<"Method not allowed">>, Req)
+            % Nếu phương thức không phải POST, trả về lỗi 405 Method Not Allowed
+            {ok, Req2} = cowboy_req:reply(
+                405,
+                #{<<"content-type">> => <<"application/json">>},
+                <<"{\"error\": \"Method not allowed\"}">>,
+                Req
+            ),
+            {stop, Req2, []}
     end.
