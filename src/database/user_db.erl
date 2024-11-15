@@ -16,4 +16,6 @@ insert_user(Username, Password) ->
 get_user(Username) ->
     Pid = whereis(mysql_conn),
     Query = io_lib:format("SELECT * FROM users WHERE username = '~s'", [Username]),
-    mysql:query(Pid, Query).
+    Data = mysql:query(Pid, Query),
+    io:format("Dat =>>>: ~p~n", [Data]),
+    Data.

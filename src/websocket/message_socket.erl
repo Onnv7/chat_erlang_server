@@ -30,6 +30,7 @@ websocket_handle({text, Msg}, State) ->
             data_type_util:print_type(ReceiverId),
             socket_server:send_message(ReceiverId, Msg),
              {ok, State};
+
         {error, Reason} ->
             io:fwrite("Failed to decode JSON: ~p~n", [Reason]),
             {ok, State}

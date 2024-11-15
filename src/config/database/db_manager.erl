@@ -45,7 +45,7 @@ create_tables(Pid) ->
     mysql:query(Pid, "CREATE TABLE IF NOT EXISTS messages (
         id INT AUTO_INCREMENT PRIMARY KEY,
         content VARCHAR(255),
-        created_at DATE,
+        created_at DATETIME,
         room_id INT,
         sender_id INT,
         FOREIGN KEY (room_id) REFERENCES rooms(id),
@@ -57,7 +57,10 @@ create_tables(Pid) ->
         id INT AUTO_INCREMENT PRIMARY KEY,
         receiver_id INT,
         sender_id INT,
+        relationship ENUM('pending', 'accepted') DEFAULT 'pending',
         FOREIGN KEY (receiver_id) REFERENCES users(id),
-        FOREIGN KEY (sender_id) REFERENCES users(id)
+        FOREIGN KEY (sender_id) REFERENCES users(id),
+        UNIQUE (sender_id, receiver_id),
+        UNIQUE (receiver_id, sender_id)
     )"),
     ok.

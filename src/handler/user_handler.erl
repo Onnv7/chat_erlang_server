@@ -1,4 +1,4 @@
--module(user_controller).
+-module(user_handler).
 -include("../config/datatype/data_type.hrl").
 -export([handle_register/2]).
 
@@ -10,6 +10,8 @@ init(Req, State) ->
     Path = http_util:get_path(Req),
     case Path of
         "/user" ->
+            handle_get(Req, State);
+        "/user/test" ->
             handle_get(Req, State);
         "/user/register" ->
             handle_register(Req, Method);

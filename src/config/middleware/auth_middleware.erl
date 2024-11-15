@@ -19,6 +19,7 @@ execute(Req, Env) ->
                     verify_token(Token, Req, Env)
             end;
         false ->
+            io:format("No need to check~n"),
             {ok, Req, Env}
     end.
 
