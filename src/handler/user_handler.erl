@@ -8,14 +8,17 @@
 init(Req, State) ->
     Method = cowboy_req:method(Req),
     Path = http_util:get_path(Req),
-    case Path of
-        "/user" ->
+    io:format("Method: ~p~n", [Method]),
+       case {Method, Path} of
+        {<<"OPTIONS">>, _} ->
+            http_util:handle_options(Req, State);
+        {<<"GET">>, "/api/user"} ->
             handle_get(Req, State);
-        "/user/test" ->
+        {<<"GET">>, "/api/user/test"} ->
             handle_get(Req, State);
-        "/user/register" ->
+        {<<"POST">>, "/api/user/register"} ->
             handle_register(Req, Method);
-        "/user/login" ->
+        {<<"POST">>, "/api/user/login"} ->
             handle_login(Req, Method);
         _ ->
             {ok, Resp} = cowboy_req:reply(404, #{<<"content-type">> => <<"application/json">>},
@@ -27,7 +30,7 @@ handle_login(Req, Method) ->
     if Method =:= <<"POST">> ->
         case user_service:handle_login_user(Req) of
             {ok, #login_response{accessToken = Token, id = Id}} ->
-                ResponseData = #{<<"accessToken">> => Token, <<"id">> => Id},
+                ResponseData = #{<<"accessToken">> => Token, <<"userId">> => Id},
                 http_util:create_response(Req, #success_response{status = 200, data = ResponseData, message = <<"Login successfully">>});
                 % Req2 = cowboy_req:reply(200, #{<<"content-type">> => <<"application/json">>}, ResponseBody, Req),
                 % {ok, Req2, []};

@@ -1,1 +1,2 @@
 -record(invitation, {sender_id, receiver_id, relationship}).
+-record(getRoomList, { id, name }).

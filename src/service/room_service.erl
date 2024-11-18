@@ -1,7 +1,7 @@
 -module(room_service).
 -include("../config/datatype/data_type.hrl").
 
--export([handle_create_room/1, handle_send_msg/1]).
+-export([handle_create_room/1, handle_send_msg/1, get_room_list/1]).
 
 handle_create_room(Req) -> 
     {ok, Body, _} = cowboy_req:read_body(Req),
@@ -22,7 +22,7 @@ handle_send_msg(Req) ->
     ContentString = list_to_binary(Content),
     SenderId = http_util:get_field_value(Body, <<"senderId">>),
     message_db:create_message(Content, RoomId, SenderId),
-    UserIdList = member_db:get_member_list(RoomId),
+    UserIdList = member_db:get_member_id_list(RoomId),
     lists:foreach(fun(UserId) ->
         data_type_util:print_type(UserId),
         if UserId =/= SenderId ->
@@ -32,3 +32,11 @@ handle_send_msg(Req) ->
             ok
         end
     end, UserIdList).
+
+get_room_list(Req) -> 
+    {ok, Body, _} = cowboy_req:read_body(Req),
+    UserId = erlang:binary_to_integer(cowboy_req:binding(userId, Req)),
+    RoomList = room_db:get_room_list(UserId),
+    data_type_util:print_type(RoomList),
+    io:format("RoomList: ~p~n", [RoomList]),
+    RoomList.

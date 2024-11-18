@@ -9,7 +9,6 @@ init(Req, State) ->
     if Method =:= <<"POST">> ->
         io:format("handle_send_msg: ~p~n", [Method]),
         room_service:handle_send_msg(Req),
-        
         http_util:create_response(200, true, <<"Send message successfully">>, Req)
     end.
 

@@ -10,10 +10,8 @@ init(Req, _State) ->
     RoomId = cowboy_req:binding(id, Req),
     io:format("RoomId: ~p~n", [RoomId]),
     case Path of
-        "/room" ->
+        "/api/room" ->
             handle_create_room(Req, Method);
-         "/room/:id/send-message" ->
-            handle_send_msg(Req, Method);
         _ ->
             {ok, Resp} = cowboy_req:reply(
                 404,
@@ -31,10 +29,3 @@ handle_create_room(Req, Method) ->
         http_util:create_response(200, true, <<"Create room successfully">>, Req)
     end.
           
-handle_send_msg(Req, Method) -> 
-    io:format("handle_send_msg: ~p~n", [Method]),
-    {ok, RoomId} = cowboy_req:binding(id, Req),
-    if Method =:= <<"POST">> ->
-        room_service:handle_send_msg(Req),
-        http_util:create_response(200, true, <<"Send message successfully">>, Req)
-    end.

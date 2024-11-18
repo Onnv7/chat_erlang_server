@@ -1,9 +1,24 @@
 -module(http_util).
 -include("../config/datatype/room_dto.hrl").
--export([init/2, handle/2, terminate/3, check_method/2, get_path/1, create_response/2, create_response/4, get_field_value/2]).
+-export([init/2, handle/2, terminate/3, check_method/2, get_path/1, create_response/2, create_response/4, get_field_value/2, handle_options/2]).
 
 -record(success_response, {status, data, message}).
 -record(error_response, {status, error, message}).
+
+-define(CORS_HEADERS(Origin), #{
+    <<"content-type">> => <<"application/json">>,
+    <<"Access-Control-Allow-Origin">> => Origin,
+    <<"Access-Control-Allow-Methods">> => <<"GET, POST, OPTIONS">>,
+    <<"Access-Control-Allow-Headers">> => <<"content-type">>,
+    <<"Access-Control-Allow-Credentials">> => <<"true">>
+}).
+
+-define(CORS_HEADERS_OPTIONS(Origin), #{
+    <<"Access-Control-Allow-Origin">> => Origin,
+    <<"Access-Control-Allow-Methods">> => <<"GET, POST, OPTIONS">>,
+    <<"Access-Control-Allow-Headers">> => <<"content-type">>,
+    <<"Access-Control-Allow-Credentials">> => <<"true">>
+}).
 
 init(Req, State) ->
     {cowboy_rest, Req, State}.
@@ -57,28 +72,45 @@ get_field_value(Body, Field) ->
 get_path(Req) ->
     Path = cowboy_req:path(Req),
     binary_to_list(Path).
-
-create_response(Req, #success_response{status = Status, data = Data, message = Message}) ->
+create_response_noencode(Req, #success_response{status = Status, data = Data, message = Message}) ->
+      Origin = cowboy_req:header(<<"origin">>, Req, <<"*">>),
     ResponseData = #{success => true, data => Data, message => Message},
     JsonData = json:encode(ResponseData),
-    Headers = #{<<"content-type">> => <<"application/json">>, <<"Access-Control-Allow-Origin">> => <<"*">>},
+    Headers = ?CORS_HEADERS(Origin),
+    Resp= cowboy_req:reply(Status, Headers, JsonData, Req),
+    {ok, Resp, []}.
+
+
+create_response(Req, #success_response{status = Status, data = Data, message = Message}) ->
+      Origin = cowboy_req:header(<<"origin">>, Req, <<"*">>),
+    ResponseData = #{success => true, data => Data, message => Message},
+    JsonData = json:encode(ResponseData),
+    Headers = ?CORS_HEADERS(Origin),
     Resp= cowboy_req:reply(Status, Headers, JsonData, Req),
     {ok, Resp, []};
 
 create_response(Req, #error_response{status = Status, error = Error, message = Message}) ->
+      Origin = cowboy_req:header(<<"origin">>, Req, <<"*">>),
     ResponseData = #{success => false, error => Error, message => Message},
     JsonData = jsx:encode(ResponseData),
-    Headers = #{<<"content-type">> => <<"application/json">>, <<"Access-Control-Allow-Origin">> => <<"*">>},
+    Headers = ?CORS_HEADERS(Origin),
     Resp = cowboy_req:reply(Status, Headers, JsonData, Req),
     {ok, Resp, []}.
 
 create_response(Status, IsSuccess, Message, Req) ->
+    Origin = cowboy_req:header(<<"origin">>, Req, <<"*">>),
+    io:format("Origin: ~p~n", [Origin]),
     ResponseData = #{success => IsSuccess, message =>  Message},
     JsonData = jsx:encode(ResponseData),
-    Headers = #{<<"content-type">> => <<"application/json">>, <<"Access-Control-Allow-Origin">> => <<"*">>},
+    Headers = ?CORS_HEADERS(Origin),
     Resp = cowboy_req:reply(Status, Headers, JsonData, Req),
     {ok, Resp, []}.
 
+handle_options(Req, State) ->
+    Origin = cowboy_req:header(<<"origin">>, Req, <<"*">>),
+    Headers = ?CORS_HEADERS_OPTIONS(Origin),
+    {ok, Req2} = cowboy_req:reply(200, Headers, <<>>, Req),
+    {ok, Req2, State}.
 
 handle(Req, State) ->
     Method = cowboy_req:method(Req),

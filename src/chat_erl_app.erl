@@ -15,10 +15,12 @@ start(_StartType, _StartArgs) ->
     socket_server:start_link(),
     Dispatch = cowboy_router:compile([
         {'_', [
-                {"/user/[...]", user_handler, []},
-                {"/room/:id/send-message", send_message_handler, []},
-                {"/room/[...]", room_handler, []},
-                {"/invitation/[...]", invitation_handler, []},
+                {"/api/user/[...]", user_handler, []},
+                {"/api/room/:id/send-message", send_message_handler, []},
+                {"/api/room/:id/message", room_handler, []},
+                {"/api/room/user/:userId", get_room_list_handler, []},
+                {"/api/room/[...]", room_handler, []},
+                {"/api/invitation/[...]", invitation_handler, []},
                 {"/ws/[...]", message_socket, []}
         ]}
     ]),

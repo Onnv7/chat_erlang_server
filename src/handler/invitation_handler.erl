@@ -6,9 +6,9 @@ init(Req, State) ->
     Method = cowboy_req:method(Req),
     Path = http_util:get_path(Req),
     case Path of
-        "/invitation/send" ->
+        "/api/invitation/send" ->
             handle_send_invitation(Req, Method);
-        "/invitation/process" ->
+        "/api/invitation/process" ->
             handle_process_invitation(Req, Method);
         _ ->
             {ok, Resp} = cowboy_req:reply(404, #{<<"content-type">> => <<"application/json">>},

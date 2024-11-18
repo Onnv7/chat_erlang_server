@@ -2,7 +2,7 @@
  [
   {description, "Chat Application"},
   {vsn, "1.0.0"},
-  {modules, [chat_erl_app, chat_erl_sup, db_manager, user_service, chat_room, user_handler, data_type_util, user_db, bcrypt_util, auth_middleware, jwt_util, message_socket, invitation_handler, invitation_service, room_handler, room_service, member_db, send_message_handler]},
+  {modules, [chat_erl_app, chat_erl_sup, db_manager, user_service, chat_room, user_handler, data_type_util, user_db, bcrypt_util, auth_middleware, jwt_util, message_socket, invitation_handler, invitation_service, room_handler, room_service, member_db, send_message_handler, get_room_list_handler]},
   {registered, []},
   {applications, [kernel, stdlib, cowboy, ranch, mysql]},
   {mod, {chat_erl_app, []}},
